@@ -1,7 +1,7 @@
 from pydantic_settings import BaseSettings
 
 
-isDev = False
+isDev = True
 if isDev:
     from dotenv import load_dotenv
     load_dotenv()
@@ -16,6 +16,13 @@ class AppSettings(BaseSettings):
         env_prefix = 'APP_'
 
 
+class DatabaseSettings(BaseSettings):
+    url: str
+
+    class Config:
+        env_prefix = 'DB_'
+
+
 class SecuritySettings(BaseSettings):
     secret_token: str
 
@@ -26,6 +33,7 @@ class SecuritySettings(BaseSettings):
 class Settings(BaseSettings):
     app: AppSettings = AppSettings()
     security: SecuritySettings = SecuritySettings()
+    db: DatabaseSettings = DatabaseSettings()
 
     class Config:
         env_file = '.env'
