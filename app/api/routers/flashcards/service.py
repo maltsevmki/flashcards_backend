@@ -7,6 +7,7 @@ from app.models.flashcards.deck import Deck
 from app.models.flashcards.template import Template
 from app.models.flashcards.card import CardTypeEnum, QueueTypeEnum
 from typing import List
+
 from app.schemas.flashcards.input.card import (
     FlashcardCreateInput,
     FlashcardReviewInput,

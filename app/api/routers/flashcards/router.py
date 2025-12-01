@@ -4,6 +4,7 @@ from app.db import async_session
 from app.api.routers.flashcards.service import Service
 from typing import List
 from app.api.routers.api_methods_enum import APIMethodsEnum
+
 from app.schemas.flashcards.input.card import (
     FlashcardCreateInput,
     FlashcardReviewInput,
@@ -25,7 +26,8 @@ router = APIRouter()
 
 @router.get(
     f'/cards/{APIMethodsEnum.list.value}',
-    response_model=List[FlashcardListItemOutput])
+    response_model=List[FlashcardListItemOutput]
+)
 async def list_cards(
     deck_name: str = None,
     type_id: int = None,
