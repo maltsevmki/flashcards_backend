@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel
 
 
@@ -24,20 +25,6 @@ class FlashcardCreateOutput(BaseModel):
     created_at: str
 
 
-class FlashcardListItemOutput(BaseModel):
-    card_id: int
-    note_id: int
-    deck: str
-    ord: int
-    front: str
-    back: str
-    tags: str
-    type_id: int
-    queue_id: int
-    due: int
-    ivl: int
-
-
 class FlashcardGetOutput(BaseModel):
     card_id: int
     note_id: int
@@ -54,6 +41,10 @@ class FlashcardGetOutput(BaseModel):
     reps: int
     lapses: int
     created_at: int
+
+
+class FlashcardListOutput(BaseModel):
+    cards: List[FlashcardGetOutput]
 
 
 class FlashcardUpdateOutput(BaseModel):

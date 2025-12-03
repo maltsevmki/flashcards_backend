@@ -35,3 +35,8 @@ class FlashcardUpdateInput(BaseModel):
 
 class FlashcardDeleteInput(BaseModel):
     card_id: int
+    user_timezone_offset_minutes: Optional[int] = 0
+
+
+class FlashcardGetInput(BaseModel):
+    card_id: int

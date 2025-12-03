@@ -7,22 +7,32 @@ from app.models.flashcards.deck import Deck
 from app.models.flashcards.template import Template
 from app.models.flashcards.card import CardTypeEnum, QueueTypeEnum
 from typing import List
-
 from app.schemas.flashcards.input.card import (
     FlashcardCreateInput,
     FlashcardReviewInput,
     FlashcardListInput,
     FlashcardUpdateInput,
     FlashcardDeleteInput,
+    FlashcardGetInput
 )
 from app.schemas.flashcards.output.card import (
     FlashcardReviewOutput,
-    FlashcardListItemOutput,
+    FlashcardListOutput,
     FlashcardGetOutput,
     FlashcardUpdateOutput,
     FlashcardDeleteOutput,
+    FlashcardCreateOutput
 )
-
+from app.schemas.flashcards.input.deck import (
+    DeckGetInput,
+    DeckUpdateInput,
+    DeckDeleteInput
+)
+from app.schemas.flashcards.output.deck import (
+    DeckGetOutput,
+    DeckUpdateOutput,
+    DeckDeleteOutput
+)
 from app.models.flashcards.review_log import RevLog
 from app.helper import get_user_localtime, anki_field_checksum
 
@@ -37,26 +47,32 @@ class Service:
     async def create_card(
         session: AsyncSession,
         data: FlashcardCreateInput
-    ) -> Card:
+    ) -> FlashcardCreateOutput:
+        # Fetch deck
         deck = (await session.exec(
             select(Deck).where(Deck.name == data.deck_name))
         ).first()
         if not deck:
             raise ValueError(f'Deck with name {data.deck_name} not found.')
 
+        # Compute current timestamp
         mod = int(get_user_localtime(
             data.user_timezone_offset_minutes
         ).timestamp())
+
+        # Fetch Notetype
         notetype = (await session.exec(
             select(Notetype).where(Notetype.name == data.type_name)
         )).first()
         if not notetype:
             raise ValueError(f'No notetype found for {data.type_name}')
 
+        # Fetch templates
         templates = (await session.exec(
             select(Template).where(Template.ntid == notetype.id)
         )).all()
 
+        # Check for existing note (by checksum)
         csum = anki_field_checksum(data.front)
         existing_note = (await session.exec(
             select(Note)
@@ -68,6 +84,7 @@ class Service:
                 'Note with same sort field already exists in this notetype.'
             )
 
+        # Create note
         note = Note(
             guid=uuid4().hex,
             mid=notetype.id,
@@ -80,13 +97,13 @@ class Service:
             flags=0,
             data=''
         )
-
         session.add(note)
         await session.commit()
         await session.refresh(note)
 
-        created_cards = []
+        created_cards: List[Card] = []
         for t in templates:
+            # Determine max due for this deck
             existing_dues = await session.exec(
                 select(Card.due)
                 .where(Card.did == deck.id)
@@ -95,6 +112,7 @@ class Service:
             )
             max_due = max(existing_dues.all() or [0])
 
+            # Create card
             card = Card(
                 nid=note.id,
                 did=deck.id,
@@ -118,15 +136,25 @@ class Service:
             created_cards.append(card)
 
         await session.commit()
-        await session.refresh(card)
+        await session.refresh(created_cards[0])
 
-        return card
+        # Return in FlashcardCreateOutput format
+        front, back = note.flds.split('\x1f')
+        return FlashcardCreateOutput(
+            card_id=created_cards[0].id,
+            note_id=note.id,
+            deck=deck.name,
+            front=front,
+            back=back,
+            tags=note.tags.strip(),
+            created_at=created_cards[0].mod
+        )
 
     @staticmethod
     async def list_cards(
         session: AsyncSession,
         data: FlashcardListInput
-    ) -> List[FlashcardListItemOutput]:
+    ) -> FlashcardListOutput:
         query = select(Card, Note, Deck).join(
             Note, Card.nid == Note.id
         ).join(Deck, Card.did == Deck.id)
@@ -136,20 +164,28 @@ class Service:
             query = query.where(Card.type_id == data.type_id)
         query = query.offset(data.offset).limit(data.limit)
         results = await session.exec(query)
-        cards: List[FlashcardListItemOutput] = []
+        cards = FlashcardListOutput(cards=[])
         for card, note, deck in results.all():
-            cards.append(FlashcardListItemOutput(
+            fields = note.flds.split('\x1f')
+            front = fields[0] if len(fields) > 0 else ""
+            back = fields[1] if len(fields) > 1 else ""
+
+            cards.cards.append(FlashcardGetOutput(
                 card_id=card.id,
                 note_id=note.id,
                 deck=deck.name,
                 ord=card.ord,
-                front=note.flds.split('\x1f')[0],
-                back=note.flds.split('\x1f')[1] if '\x1f' in note.flds else "",
+                front=front,
+                back=back,
                 tags=note.tags.strip(),
                 type_id=card.type_id,
                 queue_id=card.queue_id,
                 due=card.due,
-                ivl=card.ivl
+                ivl=card.ivl,
+                factor=card.factor,
+                reps=card.reps,
+                lapses=card.lapses,
+                created_at=card.mod
             ))
 
         return cards
@@ -237,20 +273,20 @@ class Service:
     @staticmethod
     async def get_card(
         session: AsyncSession,
-        card_id: int,
+        data: FlashcardGetInput,
     ) -> FlashcardGetOutput:
 
         query = select(Card, Note, Deck).join(
             Note, Card.nid == Note.id
         ).join(
             Deck, Card.did == Deck.id
-        ).where(Card.id == card_id)
+        ).where(Card.id == data.card_id)
 
         result = await session.exec(query)
         card_data = result.first()
 
         if not card_data:
-            raise ValueError(f'Card with id {card_id} not found')
+            raise ValueError(f'Card with id {data.card_id} not found')
 
         card, note, deck = card_data
 
@@ -280,8 +316,8 @@ class Service:
 
     @staticmethod
     async def update_card(
-            session: AsyncSession,
-            data: FlashcardUpdateInput
+        session: AsyncSession,
+        data: FlashcardUpdateInput
     ) -> FlashcardUpdateOutput:
 
         # Verify at least one field is being updated
@@ -349,8 +385,8 @@ class Service:
 
     @staticmethod
     async def delete_card(
-            session: AsyncSession,
-            data: FlashcardDeleteInput
+        session: AsyncSession,
+        data: FlashcardDeleteInput
     ) -> FlashcardDeleteOutput:
 
         card = (await session.exec(
@@ -362,10 +398,9 @@ class Service:
 
         note_id = card.nid
 
-        # Get current timestamp
-        from datetime import datetime
-        deleted_at = int(datetime.utcnow().timestamp())
-
+        deleted_at = int(get_user_localtime(
+            data.user_timezone_offset_minutes
+        ).timestamp())
         # Delete the card first
         await session.delete(card)
 
@@ -396,3 +431,122 @@ class Service:
     # --------------------------------------------------------------------------------
     # --------------------------------------------------------------------------------
     # --------------------------------------------------------------------------------
+
+    @staticmethod
+    async def get_deck(session: AsyncSession, data: DeckGetInput) -> DeckGetOutput:
+        deck = (
+            await session.exec(
+                select(Deck).where(Deck.id == data.deck_id)
+            )
+        ).first()
+
+        if not deck:
+            raise ValueError(f"Deck with id={data.deck_id} not found")
+
+        card_count = (
+            await session.exec(
+                select(Card).where(Card.did == deck.id)
+            )
+        ).all()
+
+        return DeckGetOutput(
+            deck_id=deck.id,
+            name=deck.name,
+            cards=len(card_count),
+            collection_id=deck.collection_id,
+            config_id=deck.config_id,
+            mtime_secs=deck.mtime_secs,
+        )
+
+    @staticmethod
+    async def delete_deck(
+        session: AsyncSession,
+        data: DeckDeleteInput
+    ) -> DeckDeleteOutput:
+        deck = (
+            await session.exec(
+                select(Deck).where(Deck.id == data.deck_id)
+            )
+        ).first()
+
+        if not deck:
+            raise ValueError(f"Deck with id={data.deck_id} not found")
+
+        # Count cards before deletion
+        cards = (
+            await session.exec(
+                select(Card).where(Card.did == deck.id)
+            )
+        ).all()
+
+        deleted_cards = len(cards)
+
+        # Count how many notes will be deleted (notes that ONLY belong to this deck)
+        note_ids = {card.nid for card in cards}
+
+        deleted_notes = 0
+        for nid in note_ids:
+            other_cards = (
+                await session.exec(
+                    select(Card).where(Card.nid == nid, Card.did != deck.id)
+                )
+            ).all()
+            if len(other_cards) == 0:
+                deleted_notes += 1
+
+        deleted_at = int(get_user_localtime(
+            data.user_timezone_offset_minutes
+        ).timestamp())
+        # Delete the deck (CASCADE will delete cards + revlogs + orphan notes)
+        await session.delete(deck)
+        await session.commit()
+
+        return DeckDeleteOutput(
+            name=deck.name,
+            deleted_cards=deleted_cards,
+            deleted_notes=deleted_notes,
+            message="Deck deleted successfully",
+            deleted_at=deleted_at,
+        )
+
+    @staticmethod
+    async def update_deck(
+        session: AsyncSession,
+        data: DeckUpdateInput
+    ) -> DeckUpdateOutput:
+        deck = (
+            await session.exec(
+                select(Deck).where(Deck.id == data.deck_id)
+            )
+        ).first()
+
+        if not deck:
+            raise ValueError(f"Deck with id={data.deck_id} not found")
+
+        updated_name = None
+        updated_config_id = None
+
+        # Update name
+        if data.new_name and data.new_name != deck.name:
+            deck.name = data.new_name
+            updated_name = data.new_name
+
+        # Update config_id
+        if data.config_id is not None and data.config_id != deck.config_id:
+            deck.config_id = data.config_id
+            updated_config_id = data.config_id
+
+        deck.mtime_secs = int(get_user_localtime(
+            data.user_timezone_offset_minutes
+        ).timestamp())
+        session.add(deck)
+        await session.commit()
+        await session.refresh(deck)
+
+        return DeckUpdateOutput(
+            name=deck.name,
+            updated_name=updated_name,
+            updated_config_id=updated_config_id,
+            message="Deck updated successfully",
+            updated_at=deck.mtime_secs
+        )
