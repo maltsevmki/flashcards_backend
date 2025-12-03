@@ -26,13 +26,13 @@ async def generate_flashcard_from_text(
 ) -> Dict[str, Any]:
     """
     Generate a single flashcard from provided text using AI.
-    
+
     Args:
         text: The source text to generate flashcard from
         deck_name: Name of the deck to add the card to
         type_name: Card type (default: "Basic")
         user_timezone_offset_minutes: User's timezone offset
-        
+
     Returns:
         Dictionary with card_id, front, back, and message
     """
@@ -59,14 +59,14 @@ async def generate_multiple_flashcards(
 ) -> Dict[str, Any]:
     """
     Generate multiple flashcards from provided text using AI.
-    
+
     Args:
         text: The source text to generate flashcards from
         deck_name: Name of the deck to add the cards to
         count: Number of flashcards to generate (max 10)
         type_name: Card type (default: "Basic")
         user_timezone_offset_minutes: User's timezone offset
-        
+
     Returns:
         Dictionary with list of cards, count, and message
     """
@@ -91,11 +91,11 @@ async def improve_flashcard(
 ) -> Dict[str, Any]:
     """
     Use AI to improve an existing flashcard.
-    
+
     Args:
         card_id: ID of the card to improve
         improvement_instruction: Optional specific instruction for improvement
-        
+
     Returns:
         Dictionary with original and improved versions of the card
     """
@@ -116,10 +116,10 @@ async def suggest_tags(
 ) -> Dict[str, Any]:
     """
     Use AI to suggest relevant tags for a flashcard.
-    
+
     Args:
         card_id: ID of the card to suggest tags for
-        
+
     Returns:
         Dictionary with current tags and suggested tags
     """
@@ -128,4 +128,3 @@ async def suggest_tags(
             session=session,
             card_id=card_id
         )
-
