@@ -12,7 +12,8 @@ from app.schemas.flashcards.input.card import (
 )
 from app.schemas.flashcards.output.card import (
     FlashcardCreateOutput,
-    FlashcardListItemOutput
+    FlashcardListItemOutput,
+    FlashcardGetOutput,
 )
 
 
@@ -46,9 +47,17 @@ async def list_cards(
         )
 
 
-@router.get(f'/cards/{APIMethodsEnum.get.value}', dependencies=[Depends(get_api_key)])
-async def get_flashcard():
-    return {'message': 'TO DO'}
+@router.get(
+    f'/cards/{APIMethodsEnum.get.value}',
+    response_model=FlashcardGetOutput,
+    dependencies=[Depends(get_api_key)]
+)
+async def get_flashcard(card_id: int):
+    async with async_session() as session:
+        return await Service.get_card(
+            session=session,
+            card_id=card_id
+        )
 
 
 @router.post(

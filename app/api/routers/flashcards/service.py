@@ -15,7 +15,8 @@ from app.schemas.flashcards.input.card import (
 )
 from app.schemas.flashcards.output.card import (
     FlashcardReviewOutput,
-    FlashcardListItemOutput
+    FlashcardListItemOutput,
+    FlashcardGetOutput
 )
 from app.models.flashcards.review_log import RevLog
 from app.helper import get_user_localtime, anki_field_checksum
@@ -226,6 +227,50 @@ class Service:
             lapses=card.lapses,
             reviewed_at=mod,
             revlog_id=revlog_entry.id
+        )
+
+    @staticmethod
+    async def get_card(
+        session: AsyncSession,
+        card_id: int,
+    ) -> FlashcardGetOutput:
+
+        query = select(Card, Note, Deck).join(
+            Note, Card.nid == Note.id
+        ).join(
+            Deck, Card.did == Deck.id
+        ).where(Card.id == card_id)
+
+        result = await session.exec(query)
+        card_data = result.first()
+
+        if not card_data:
+            raise ValueError(f'Card with id {card_id} not found')
+
+        card, note, deck = card_data
+
+        # Parse the note fields (front and back)
+        fields = note.flds.split('\x1f')
+        front = fields[0] if len(fields) > 0 else ""
+        back = fields[1] if len(fields) > 1 else ""
+
+        # Return the complete card information
+        return FlashcardGetOutput(
+            card_id=card.id,
+            note_id=note.id,
+            deck=deck.name,
+            ord=card.ord,
+            front=front,
+            back=back,
+            tags=note.tags.strip(),
+            type_id=card.type_id,
+            queue_id=card.queue_id,
+            due=card.due,
+            ivl=card.ivl,
+            factor=card.factor,
+            reps=card.reps,
+            lapses=card.lapses,
+            created_at=card.mod
         )
 
     # Decks

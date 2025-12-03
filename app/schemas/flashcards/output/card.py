@@ -36,3 +36,21 @@ class FlashcardListItemOutput(BaseModel):
     queue_id: int
     due: int
     ivl: int
+
+
+class FlashcardGetOutput(BaseModel):
+    card_id: int
+    note_id: int
+    ord: int
+    front: str
+    back: str
+    tags: str
+    deck: str
+    type_id: int
+    queue_id: int
+    due: int
+    ivl: int
+    factor: int
+    reps: int
+    lapses: int
+    created_at: int
