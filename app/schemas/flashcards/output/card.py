@@ -65,3 +65,10 @@ class FlashcardUpdateOutput(BaseModel):
     tags: str
     updated_at: int
     message: str
+
+
+class FlashcardDeleteOutput(BaseModel):
+    card_id: int
+    note_id: int
+    message: str
+    deleted_at: int

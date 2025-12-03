@@ -9,13 +9,15 @@ from app.schemas.flashcards.input.card import (
     FlashcardCreateInput,
     FlashcardReviewInput,
     FlashcardListInput,
-    FlashcardUpdateInput
+    FlashcardUpdateInput,
+    FlashcardDeleteInput,
 )
 from app.schemas.flashcards.output.card import (
     FlashcardCreateOutput,
     FlashcardListItemOutput,
     FlashcardGetOutput,
-    FlashcardUpdateOutput
+    FlashcardUpdateOutput,
+    FlashcardDeleteOutput
 )
 
 
@@ -135,9 +137,19 @@ async def update_flashcard(
 
 @router.delete(
     f'/cards/{APIMethodsEnum.delete.value}',
-    dependencies=[Depends(get_api_key)])
-async def delete_flashcard():
-    return {'message': 'TO DO'}
+    response_model=FlashcardDeleteOutput,
+    dependencies=[Depends(get_api_key)]
+)
+async def delete_flashcard(
+    card_id: int,
+) -> FlashcardDeleteOutput:
+    async with async_session() as session:
+        return await Service.delete_card(
+            session=session,
+            data=FlashcardDeleteInput(
+                card_id=card_id
+            )
+        )
 
 # Decks
 # --------------------------------------------------------------------------------

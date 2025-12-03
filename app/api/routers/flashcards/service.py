@@ -13,13 +13,16 @@ from app.schemas.flashcards.input.card import (
     FlashcardReviewInput,
     FlashcardListInput,
     FlashcardUpdateInput,
+    FlashcardDeleteInput,
 )
 from app.schemas.flashcards.output.card import (
     FlashcardReviewOutput,
     FlashcardListItemOutput,
     FlashcardGetOutput,
     FlashcardUpdateOutput,
+    FlashcardDeleteOutput,
 )
+
 from app.models.flashcards.review_log import RevLog
 from app.helper import get_user_localtime, anki_field_checksum
 
@@ -342,6 +345,51 @@ class Service:
             tags=new_tags,
             updated_at=mod,
             message='Flashcard updated successfully'
+        )
+
+    @staticmethod
+    async def delete_card(
+            session: AsyncSession,
+            data: FlashcardDeleteInput
+    ) -> FlashcardDeleteOutput:
+
+        card = (await session.exec(
+            select(Card).where(Card.id == data.card_id)
+        )).first()
+
+        if not card:
+            raise ValueError(f'Card with id {data.card_id} not found')
+
+        note_id = card.nid
+
+        # Get current timestamp
+        from datetime import datetime
+        deleted_at = int(datetime.utcnow().timestamp())
+
+        # Delete the card first
+        await session.delete(card)
+
+        # Check if there are other cards using the same note
+        remaining_cards = (await session.exec(
+            select(Card).where(Card.nid == note_id)
+        )).all()
+
+        # If no other cards use this note, delete the note too
+        if len(remaining_cards) == 0:
+            note = (await session.exec(
+                select(Note).where(Note.id == note_id)
+            )).first()
+            if note:
+                await session.delete(note)
+
+        # Commit the deletion
+        await session.commit()
+
+        return FlashcardDeleteOutput(
+            card_id=data.card_id,
+            note_id=note_id,
+            message='Flashcard deleted successfully',
+            deleted_at=deleted_at
         )
 
     # Decks
