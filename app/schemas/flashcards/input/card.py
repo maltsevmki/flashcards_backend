@@ -23,3 +23,11 @@ class FlashcardCreateInput(BaseModel):
     back: str
     tags: Optional[str] = ''
     user_timezone_offset_minutes: Optional[int] = 0
+
+
+class FlashcardUpdateInput(BaseModel):
+    card_id: int
+    front: Optional[str] = None
+    back: Optional[str] = None
+    tags: Optional[str] = None
+    user_timezone_offset_minutes: Optional[int] = 0

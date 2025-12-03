@@ -54,3 +54,14 @@ class FlashcardGetOutput(BaseModel):
     reps: int
     lapses: int
     created_at: int
+
+
+class FlashcardUpdateOutput(BaseModel):
+    card_id: int
+    note_id: int
+    deck: str
+    front: str
+    back: str
+    tags: str
+    updated_at: int
+    message: str

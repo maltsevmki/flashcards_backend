@@ -11,12 +11,14 @@ from typing import List
 from app.schemas.flashcards.input.card import (
     FlashcardCreateInput,
     FlashcardReviewInput,
-    FlashcardListInput
+    FlashcardListInput,
+    FlashcardUpdateInput,
 )
 from app.schemas.flashcards.output.card import (
     FlashcardReviewOutput,
     FlashcardListItemOutput,
-    FlashcardGetOutput
+    FlashcardGetOutput,
+    FlashcardUpdateOutput,
 )
 from app.models.flashcards.review_log import RevLog
 from app.helper import get_user_localtime, anki_field_checksum
@@ -271,6 +273,75 @@ class Service:
             reps=card.reps,
             lapses=card.lapses,
             created_at=card.mod
+        )
+
+    @staticmethod
+    async def update_card(
+            session: AsyncSession,
+            data: FlashcardUpdateInput
+    ) -> FlashcardUpdateOutput:
+
+        # Verify at least one field is being updated
+        if data.front is None and data.back is None and data.tags is None:
+            raise ValueError(
+                'At least one field (front, back, or tags) must be '
+                'provided for update'
+            )
+
+        # Get the card and its note
+        query = select(Card, Note, Deck).join(
+            Note, Card.nid == Note.id
+        ).join(
+            Deck, Card.did == Deck.id
+        ).where(Card.id == data.card_id)
+
+        result = await session.exec(query)
+        card_data = result.first()
+
+        if not card_data:
+            raise ValueError(f'Card with id {data.card_id} not found')
+
+        card, note, deck = card_data
+
+        # Get current timestamp
+        mod = int(get_user_localtime(
+            data.user_timezone_offset_minutes
+        ).timestamp())
+
+        # Parse existing fields
+        fields = note.flds.split('\x1f')
+        current_front = fields[0] if len(fields) > 0 else ""
+        current_back = fields[1] if len(fields) > 1 else ""
+
+        # Update fields (only if new value provided)
+        new_front = data.front if data.front is not None else current_front
+        new_back = data.back if data.back is not None else current_back
+        new_tags = data.tags if data.tags is not None else note.tags.strip()
+
+        # Update the note
+        note.flds = f'{new_front}\x1f{new_back}'
+        note.sfld = new_front  # Sort field is the front
+        note.csum = anki_field_checksum(new_front)
+        note.tags = f' {new_tags.strip()} ' if new_tags else ''
+        note.mod = mod
+
+        # Update the card's modification time
+        card.mod = mod
+
+        # Commit changes
+        await session.commit()
+        await session.refresh(note)
+        await session.refresh(card)
+
+        return FlashcardUpdateOutput(
+            card_id=card.id,
+            note_id=note.id,
+            deck=deck.name,
+            front=new_front,
+            back=new_back,
+            tags=new_tags,
+            updated_at=mod,
+            message='Flashcard updated successfully'
         )
 
     # Decks

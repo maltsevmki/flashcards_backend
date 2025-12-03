@@ -8,12 +8,14 @@ from app.api.routers.api_methods_enum import APIMethodsEnum
 from app.schemas.flashcards.input.card import (
     FlashcardCreateInput,
     FlashcardReviewInput,
-    FlashcardListInput
+    FlashcardListInput,
+    FlashcardUpdateInput
 )
 from app.schemas.flashcards.output.card import (
     FlashcardCreateOutput,
     FlashcardListItemOutput,
     FlashcardGetOutput,
+    FlashcardUpdateOutput
 )
 
 
@@ -108,9 +110,27 @@ async def create_flashcard(
 
 @router.put(
     f'/cards/{APIMethodsEnum.update.value}',
-    dependencies=[Depends(get_api_key)])
-async def update_flashcard():
-    return {'message': 'TO DO'}
+    response_model=FlashcardUpdateOutput,
+    dependencies=[Depends(get_api_key)]
+)
+async def update_flashcard(
+    card_id: int,
+    front: str = None,
+    back: str = None,
+    tags: str = None,
+    user_timezone_offset_minutes: int = 0
+) -> FlashcardUpdateOutput:
+    async with async_session() as session:
+        return await Service.update_card(
+            session=session,
+            data=FlashcardUpdateInput(
+                card_id=card_id,
+                front=front,
+                back=back,
+                tags=tags,
+                user_timezone_offset_minutes=user_timezone_offset_minutes
+            )
+        )
 
 
 @router.delete(
