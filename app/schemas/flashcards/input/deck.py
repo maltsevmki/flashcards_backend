@@ -2,6 +2,10 @@ from pydantic import BaseModel
 from typing import Optional
 
 
+class DeckCreateInput(BaseModel):
+    name: str
+
+
 class DeckGetInput(BaseModel):
     deck_id: int
 

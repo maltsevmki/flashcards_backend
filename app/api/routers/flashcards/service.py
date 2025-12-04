@@ -25,9 +25,8 @@ from app.schemas.flashcards.output.card import (
 from app.schemas.flashcards.input.deck import (
     DeckCreateInput
 )
-
 from app.schemas.flashcards.output.deck import (
-    DeckCreateOutput,
+    DeckGetOutput,
     DeckListItemOutput
 )
 
@@ -409,7 +408,7 @@ class Service:
     async def create_deck(
         session: AsyncSession,
         data: DeckCreateInput
-    ) -> DeckCreateOutput:
+    ) -> DeckGetOutput:
         # Check if deck with same name already exists
         existing_deck = (await session.exec(
             select(Deck).where(Deck.name == data.name)
@@ -417,13 +416,13 @@ class Service:
         if existing_deck:
             raise ValueError(f'Deck with name {data.name} already exists.')
 
-        # Get collection (you may need to adjust this based on your logic)
+        # Get collection
         from app.models.flashcards.collection import Collection
         collection = (await session.exec(select(Collection))).first()
         if not collection:
             raise ValueError('No collection found.')
 
-        # Get or create default deck config
+        # Get default deck config
         from app.models.flashcards.deck import DeckConfig
         config = (await session.exec(select(DeckConfig))).first()
         if not config:
@@ -444,9 +443,13 @@ class Service:
         await session.commit()
         await session.refresh(deck)
 
-        return DeckCreateOutput(
-            id=deck.id,
-            name=deck.name
+        return DeckGetOutput(
+            deck_id=deck.id,
+            name=deck.name,
+            cards=0,
+            collection_id=deck.collection_id,
+            config_id=deck.config_id,
+            mtime_secs=deck.mtime_secs
         )
 
     @staticmethod

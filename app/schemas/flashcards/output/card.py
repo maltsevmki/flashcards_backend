@@ -43,6 +43,20 @@ class FlashcardGetOutput(BaseModel):
     created_at: int
 
 
+class FlashcardListItemOutput(BaseModel):
+    card_id: int
+    note_id: int
+    deck: str
+    ord: int
+    front: str
+    back: str
+    tags: str
+    type_id: int
+    queue_id: int
+    due: int
+    ivl: int
+
+
 class FlashcardListOutput(BaseModel):
     cards: List[FlashcardGetOutput]
 

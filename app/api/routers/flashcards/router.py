@@ -22,9 +22,8 @@ from app.schemas.flashcards.output.card import (
 from app.schemas.flashcards.input.deck import (
     DeckCreateInput
 )
-
 from app.schemas.flashcards.output.deck import (
-    DeckCreateOutput,
+    DeckGetOutput,
     DeckListItemOutput
 )
 
@@ -167,18 +166,16 @@ async def delete_flashcard(
 
 @router.post(
     f'/decks/{APIMethodsEnum.create.value}',
-    response_model=DeckCreateOutput,
+    response_model=DeckGetOutput,
     dependencies=[Depends(get_api_key)]
 )
 async def create_deck(
     name: str,
-) -> DeckCreateOutput:
+) -> DeckGetOutput:
     async with async_session() as session:
         return await Service.create_deck(
             session=session,
-            data=DeckCreateInput(
-                name=name
-            )
+            data=DeckCreateInput(name=name)
         )
 
 
