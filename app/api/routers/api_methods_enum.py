@@ -8,3 +8,4 @@ class APIMethodsEnum(Enum):
     update = 'update'
     delete = 'delete'
     list = 'list'
+    search = 'search'

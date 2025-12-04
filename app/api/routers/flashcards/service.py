@@ -21,7 +21,8 @@ from app.schemas.flashcards.input.card import (
     FlashcardListInput,
     FlashcardUpdateInput,
     FlashcardDeleteInput,
-    FlashcardGetInput
+    FlashcardGetInput,
+    FlashcardSearchInput,
 )
 from app.schemas.flashcards.output.card import (
     FlashcardReviewOutput,
@@ -642,3 +643,54 @@ class Service:
             message='Deck updated successfully',
             updated_at=deck.mtime_secs
         )
+
+    @staticmethod
+    async def search_cards(
+        session: AsyncSession,
+        data: FlashcardSearchInput
+    ) -> FlashcardListOutput:
+        query = select(Card, Note, Deck).join(
+            Note, Card.nid == Note.id
+        ).join(Deck, Card.did == Deck.id)
+
+        # Search in front and back fields (stored in note.flds)
+        query = query.where(Note.flds.ilike(f'%{data.query}%'))
+
+        # Optional filters
+        if data.deck_name is not None:
+            query = query.where(Deck.name == data.deck_name)
+        if data.tags is not None:
+            query = query.where(Note.tags.ilike(f'%{data.tags}%'))
+        if data.type_id is not None:
+            query = query.where(Card.type_id == data.type_id)
+
+        # Pagination
+        query = query.offset(data.offset).limit(data.limit)
+
+        results = await session.exec(query)
+        cards = FlashcardListOutput(cards=[])
+
+        for card, note, deck in results.all():
+            fields = note.flds.split('\x1f')
+            front = fields[0] if len(fields) > 0 else ""
+            back = fields[1] if len(fields) > 1 else ""
+
+            cards.cards.append(FlashcardGetOutput(
+                card_id=card.id,
+                note_id=note.id,
+                deck=deck.name,
+                ord=card.ord,
+                front=front,
+                back=back,
+                tags=note.tags.strip(),
+                type_id=card.type_id,
+                queue_id=card.queue_id,
+                due=card.due,
+                ivl=card.ivl,
+                factor=card.factor,
+                reps=card.reps,
+                lapses=card.lapses,
+                created_at=card.mod
+            ))
+
+        return cards

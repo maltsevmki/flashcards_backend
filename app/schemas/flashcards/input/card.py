@@ -40,3 +40,12 @@ class FlashcardDeleteInput(BaseModel):
 
 class FlashcardGetInput(BaseModel):
     card_id: int
+
+
+class FlashcardSearchInput(BaseModel):
+    query: str
+    deck_name: str | None = None
+    tags: str | None = None
+    type_id: int | None = None
+    limit: int = 100
+    offset: int = 0

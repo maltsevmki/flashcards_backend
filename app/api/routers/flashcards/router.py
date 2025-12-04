@@ -10,7 +10,8 @@ from app.schemas.flashcards.input.card import (
     FlashcardListInput,
     FlashcardUpdateInput,
     FlashcardDeleteInput,
-    FlashcardGetInput
+    FlashcardGetInput,
+    FlashcardSearchInput
 )
 from app.schemas.flashcards.input.deck import (
     DeckDeleteInput,
@@ -168,6 +169,33 @@ async def delete_flashcard(
             data=FlashcardDeleteInput(
                 card_id=card_id,
                 user_timezone_offset_minutes=user_timezone_offset_minutes
+            )
+        )
+
+
+@router.get(
+    f'/{PrefixEnum.cards.value}/{APIMethodsEnum.search.value}',
+    response_model=FlashcardListOutput,
+    dependencies=[Depends(get_api_key)]
+)
+async def search_cards(
+    query: str,
+    deck_name: str = None,
+    tags: str = None,
+    type_id: int = None,
+    limit: int = 100,
+    offset: int = 0
+) -> FlashcardListOutput:
+    async with async_session() as session:
+        return await Service.search_cards(
+            session=session,
+            data=FlashcardSearchInput(
+                query=query,
+                deck_name=deck_name,
+                tags=tags,
+                type_id=type_id,
+                limit=limit,
+                offset=offset
             )
         )
 
