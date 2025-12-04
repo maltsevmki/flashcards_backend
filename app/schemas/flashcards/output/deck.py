@@ -1,10 +1,9 @@
 from pydantic import BaseModel
 
 
-class DeckListItemOutput(BaseModel):
+class DeckCreateOutput(BaseModel):
     deck_id: int
     name: str
-    cards_count: int
 
 
 class DeckGetOutput(BaseModel):
@@ -14,6 +13,10 @@ class DeckGetOutput(BaseModel):
     collection_id: int
     config_id: int
     mtime_secs: int
+
+
+class DeckListOutput(BaseModel):
+    decks: list[DeckGetOutput]
 
 
 class DeckDeleteOutput(BaseModel):

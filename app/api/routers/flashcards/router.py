@@ -2,30 +2,37 @@ from fastapi import APIRouter, Depends
 from app.core.security import get_api_key
 from app.db import async_session
 from app.api.routers.flashcards.service import Service
-from typing import List
 from app.api.routers.api_methods_enum import APIMethodsEnum
-
+from app.api.routers.flashcards.prefix_enum import PrefixEnum
 from app.schemas.flashcards.input.card import (
     FlashcardCreateInput,
     FlashcardReviewInput,
     FlashcardListInput,
     FlashcardUpdateInput,
     FlashcardDeleteInput,
+    FlashcardGetInput
+)
+from app.schemas.flashcards.input.deck import (
+    DeckDeleteInput,
+    DeckGetInput,
+    DeckUpdateInput,
+    DeckCreateInput,
+    DeckListInput
+)
+from app.schemas.flashcards.output.deck import (
+    DeckGetOutput,
+    DeckDeleteOutput,
+    DeckUpdateOutput,
+    DeckListOutput,
+    DeckCreateOutput
 )
 from app.schemas.flashcards.output.card import (
     FlashcardCreateOutput,
-    FlashcardListItemOutput,
     FlashcardGetOutput,
     FlashcardUpdateOutput,
-    FlashcardDeleteOutput
-)
-from app.schemas.flashcards.input.deck import (
-    DeckCreateInput
-)
-
-from app.schemas.flashcards.output.deck import (
-    DeckCreateOutput,
-    DeckListItemOutput
+    FlashcardReviewOutput,
+    FlashcardDeleteOutput,
+    FlashcardListOutput
 )
 
 
@@ -38,15 +45,16 @@ router = APIRouter()
 
 
 @router.get(
-    f'/cards/{APIMethodsEnum.list.value}',
-    response_model=List[FlashcardListItemOutput]
+    f'/{PrefixEnum.cards.value}/{APIMethodsEnum.list.value}',
+    response_model=FlashcardListOutput,
+    dependencies=[Depends(get_api_key)]
 )
 async def list_cards(
     deck_name: str = None,
     type_id: int = None,
     limit: int = 100,
     offset: int = 0
-):
+) -> FlashcardListOutput:
     async with async_session() as session:
         return await Service.list_cards(
             session=session,
@@ -60,27 +68,28 @@ async def list_cards(
 
 
 @router.get(
-    f'/cards/{APIMethodsEnum.get.value}',
+    f'/{PrefixEnum.cards.value}/{APIMethodsEnum.get.value}',
     response_model=FlashcardGetOutput,
     dependencies=[Depends(get_api_key)]
 )
-async def get_flashcard(card_id: int):
+async def get_flashcard(card_id: int) -> FlashcardGetOutput:
     async with async_session() as session:
         return await Service.get_card(
             session=session,
-            card_id=card_id
+            data=FlashcardGetInput(card_id=card_id)
         )
 
 
 @router.post(
-    f'/cards/{APIMethodsEnum.review.value}',
+    f'/{PrefixEnum.cards.value}/{APIMethodsEnum.review.value}',
+    response_model=FlashcardReviewOutput,
     dependencies=[Depends(get_api_key)])
 async def review_card(
     card_id: int,
     ease: int,
     review_time_ms: int,
     user_timezone_offset_minutes: int = 0
-):
+) -> FlashcardReviewOutput:
     async with async_session() as session:
         return await Service.review_card(
             session=session,
@@ -94,7 +103,8 @@ async def review_card(
 
 
 @router.post(
-    f'/cards/{APIMethodsEnum.create.value}',
+    f'/{PrefixEnum.cards.value}/{APIMethodsEnum.create.value}',
+    response_model=FlashcardCreateOutput,
     dependencies=[Depends(get_api_key)])
 async def create_flashcard(
     type_name: str,
@@ -119,7 +129,7 @@ async def create_flashcard(
 
 
 @router.put(
-    f'/cards/{APIMethodsEnum.update.value}',
+    f'/{PrefixEnum.cards.value}/{APIMethodsEnum.update.value}',
     response_model=FlashcardUpdateOutput,
     dependencies=[Depends(get_api_key)]
 )
@@ -144,20 +154,23 @@ async def update_flashcard(
 
 
 @router.delete(
-    f'/cards/{APIMethodsEnum.delete.value}',
+    f'/{PrefixEnum.cards.value}/{APIMethodsEnum.delete.value}',
     response_model=FlashcardDeleteOutput,
     dependencies=[Depends(get_api_key)]
 )
 async def delete_flashcard(
     card_id: int,
+    user_timezone_offset_minutes: int = 0
 ) -> FlashcardDeleteOutput:
     async with async_session() as session:
         return await Service.delete_card(
             session=session,
             data=FlashcardDeleteInput(
-                card_id=card_id
+                card_id=card_id,
+                user_timezone_offset_minutes=user_timezone_offset_minutes
             )
         )
+
 
 # Decks
 # --------------------------------------------------------------------------------
@@ -166,7 +179,7 @@ async def delete_flashcard(
 
 
 @router.post(
-    f'/decks/{APIMethodsEnum.create.value}',
+    f'/{PrefixEnum.decks.value}/{APIMethodsEnum.create.value}',
     response_model=DeckCreateOutput,
     dependencies=[Depends(get_api_key)]
 )
@@ -183,17 +196,76 @@ async def create_deck(
 
 
 @router.get(
-    f'/decks/{APIMethodsEnum.list.value}',
-    response_model=List[DeckListItemOutput],
+    f'/{PrefixEnum.decks.value}/{APIMethodsEnum.list.value}',
+    response_model=DeckListOutput,
     dependencies=[Depends(get_api_key)],
 )
 async def list_decks(
     limit: int = 100,
     offset: int = 0
-) -> List[DeckListItemOutput]:
+) -> DeckListOutput:
     async with async_session() as session:
         return await Service.list_decks(
             session=session,
-            limit=limit,
-            offset=offset
+            data=DeckListInput(
+                limit=limit,
+                offset=offset
+            )
+        )
+
+
+@router.get(
+    f'/{PrefixEnum.decks.value}/{APIMethodsEnum.get.value}',
+    response_model=DeckGetOutput,
+    dependencies=[Depends(get_api_key)]
+)
+async def get_deck(deck_id: int) -> DeckGetOutput:
+    async with async_session() as session:
+        return await Service.get_deck(
+            session=session,
+            data=DeckGetInput(
+                deck_id=deck_id
+            )
+        )
+
+
+@router.delete(
+    f'/{PrefixEnum.decks.value}/{APIMethodsEnum.delete.value}',
+    response_model=DeckDeleteOutput,
+    dependencies=[Depends(get_api_key)]
+)
+async def delete_deck(
+    deck_id: int,
+    user_timezone_offset_minutes: int = 0
+) -> DeckDeleteOutput:
+    async with async_session() as session:
+        return await Service.delete_deck(
+            session=session,
+            data=DeckDeleteInput(
+                deck_id=deck_id,
+                user_timezone_offset_minutes=user_timezone_offset_minutes
+            )
+        )
+
+
+@router.put(
+    f'/{PrefixEnum.decks.value}/{APIMethodsEnum.update.value}',
+    response_model=DeckUpdateOutput,
+    dependencies=[Depends(get_api_key)]
+)
+async def update_deck(
+    deck_id: int,
+    name: str = None,
+    config_id: int = None,
+    user_timezone_offset_minutes: int = 0
+) -> DeckUpdateOutput:
+    async with async_session() as session:
+        return await Service.update_deck(
+            session=session,
+            data=DeckUpdateInput(
+                deck_id=deck_id,
+                new_name=name,
+                config_id=config_id,
+                user_timezone_offset_minutes=user_timezone_offset_minutes
+            )
         )
