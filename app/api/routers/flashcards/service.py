@@ -22,6 +22,13 @@ from app.schemas.flashcards.output.card import (
     FlashcardUpdateOutput,
     FlashcardDeleteOutput,
 )
+from app.schemas.flashcards.input.deck import (
+    DeckCreateInput
+)
+
+from app.schemas.flashcards.output.deck import (
+    DeckCreateOutput
+)
 
 from app.models.flashcards.review_log import RevLog
 from app.helper import get_user_localtime, anki_field_checksum
@@ -396,3 +403,47 @@ class Service:
     # --------------------------------------------------------------------------------
     # --------------------------------------------------------------------------------
     # --------------------------------------------------------------------------------
+
+    @staticmethod
+    async def create_deck(
+        session: AsyncSession,
+        data: DeckCreateInput
+    ) -> DeckCreateOutput:
+        # Check if deck with same name already exists
+        existing_deck = (await session.exec(
+            select(Deck).where(Deck.name == data.name)
+        )).first()
+        if existing_deck:
+            raise ValueError(f'Deck with name {data.name} already exists.')
+
+        # Get collection (you may need to adjust this based on your logic)
+        from app.models.flashcards.collection import Collection
+        collection = (await session.exec(select(Collection))).first()
+        if not collection:
+            raise ValueError('No collection found.')
+
+        # Get or create default deck config
+        from app.models.flashcards.deck import DeckConfig
+        config = (await session.exec(select(DeckConfig))).first()
+        if not config:
+            raise ValueError('No deck config found.')
+
+        import time
+        mtime = int(time.time())
+
+        deck = Deck(
+            name=data.name,
+            mtime_secs=mtime,
+            usn=0,
+            collection_id=collection.id,
+            config_id=config.id
+        )
+
+        session.add(deck)
+        await session.commit()
+        await session.refresh(deck)
+
+        return DeckCreateOutput(
+            id=deck.id,
+            name=deck.name
+        )
