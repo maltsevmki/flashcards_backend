@@ -24,7 +24,8 @@ from app.schemas.flashcards.input.deck import (
 )
 
 from app.schemas.flashcards.output.deck import (
-    DeckCreateOutput
+    DeckCreateOutput,
+    DeckListItemOutput
 )
 
 
@@ -178,4 +179,21 @@ async def create_deck(
             data=DeckCreateInput(
                 name=name
             )
+        )
+
+
+@router.get(
+    f'/decks/{APIMethodsEnum.list.value}',
+    response_model=List[DeckListItemOutput],
+    dependencies=[Depends(get_api_key)],
+)
+async def list_decks(
+    limit: int = 100,
+    offset: int = 0
+) -> List[DeckListItemOutput]:
+    async with async_session() as session:
+        return await Service.list_decks(
+            session=session,
+            limit=limit,
+            offset=offset
         )

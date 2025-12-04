@@ -27,7 +27,8 @@ from app.schemas.flashcards.input.deck import (
 )
 
 from app.schemas.flashcards.output.deck import (
-    DeckCreateOutput
+    DeckCreateOutput,
+    DeckListItemOutput
 )
 
 from app.models.flashcards.review_log import RevLog
@@ -447,3 +448,31 @@ class Service:
             id=deck.id,
             name=deck.name
         )
+
+    @staticmethod
+    async def list_decks(
+        session: AsyncSession,
+        limit: int = 100,
+        offset: int = 0
+    ) -> List[DeckListItemOutput]:
+        from sqlmodel import func
+
+        query = (
+            select(Deck.id, Deck.name, func.count(Card.id).label('cards_count'))
+            .outerjoin(Card, Card.did == Deck.id)
+            .group_by(Deck.id, Deck.name)
+            .offset(offset)
+            .limit(limit)
+        )
+
+        results = await session.exec(query)
+        decks: List[DeckListItemOutput] = []
+
+        for deck_id, name, cards_count in results.all():
+            decks.append(DeckListItemOutput(
+                deck_id=deck_id,
+                name=name,
+                cards_count=cards_count
+            ))
+
+        return decks

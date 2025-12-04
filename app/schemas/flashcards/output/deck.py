@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 
 
+class DeckListItemOutput(BaseModel):
+    deck_id: int
+    name: str
+    cards_count: int
+
+
 class DeckGetOutput(BaseModel):
     deck_id: int
     name: str
