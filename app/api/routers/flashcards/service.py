@@ -558,12 +558,12 @@ class Service:
     ) -> DeckDeleteOutput:
         deck = (
             await session.exec(
-                select(Deck).where(Deck.id == data.id)
+                select(Deck).where(Deck.id == data.deck_id)
             )
         ).first()
 
         if not deck:
-            raise ValueError(f"Deck with id={data.id} not found")
+            raise ValueError(f"Deck with id={data.deck_id} not found")
 
         # Count cards before deletion
         cards = (

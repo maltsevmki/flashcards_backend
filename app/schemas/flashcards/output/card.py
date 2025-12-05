@@ -22,7 +22,7 @@ class FlashcardCreateOutput(BaseModel):
     front: str
     back: str
     tags: str
-    created_at: str
+    created_at: int
 
 
 class FlashcardGetOutput(BaseModel):

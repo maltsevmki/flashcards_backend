@@ -1,12 +1,19 @@
-setuptools>=80.0.0
-pre_commit==4.5.0
+# =============================================================================
+# Production Dependencies
+# =============================================================================
+
+# Web Framework
 fastapi>=0.116.1
-flake8==7.0.0
-python-dotenv==1.2.1
 uvicorn>=0.38.0
+
+# Database
 SQLAlchemy>=2.0.14
-pydantic>=2.11.5
-pydantic-settings>=2.6.1
 sqlmodel>=0.0.27
 asyncpg>=0.27.0
-# mcp>=1.22.0
+
+# Data Validation
+pydantic>=2.11.5
+pydantic-settings>=2.6.1
+
+# Utilities
+python-dotenv>=1.2.1
