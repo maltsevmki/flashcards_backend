@@ -4,7 +4,6 @@ Tests all card-related CRUD operations, review logic, and search functionality.
 """
 import pytest
 from sqlmodel import select
-from unittest.mock import patch
 
 from app.api.routers.flashcards.service import Service
 from app.schemas.flashcards.input.card import (
