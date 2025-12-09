@@ -1,0 +1,32 @@
+name: "\U0001F4A1 Enhancement Request"
+description: Suggest an idea, feature, or improvement for flashcards_backend
+labels: [enhancement, pending]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting improvements! ✨
+
+        ## Before you submit
+
+        - **Check for existing requests** before posting
+        - **Describe the problem your feature would solve**
+        - **Think about impact: is this small, large, breaking, etc?**
+
+  - type: textarea
+    id: enhancement
+    attributes:
+      label: Enhancement
+      description: What is the new feature/idea? How would it help you or others?
+      placeholder: Please describe in detail.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives
+      description: Any alternative solutions you’ve tried or considered?
+      placeholder: Optional, but helpful!
+    validations:
+      required: false
