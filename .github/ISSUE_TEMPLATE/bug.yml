@@ -1,0 +1,56 @@
+name: "\U0001F41B Bug Report"
+description: Report a bug or unexpected behavior in flashcards_backend
+labels: [bug, pending]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for contributing to flashcards_backend! 🚩
+
+        ## Before you submit
+
+        - **Make sure you're testing on the latest commit or release**
+        - **Search existing issues** to avoid duplicates
+        - **Include a minimal, reproducible example (MRE)** or steps to reproduce
+        - Please fill out *all* fields so we can help quickly!
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Describe the bug and what you expected to happen.
+      placeholder: What happened? What did you expect to see instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps/Code to Reproduce
+      description: "Provide as much detail as possible so others can reproduce the bug (including code, requests, API calls, test data, etc)"
+      placeholder: |
+        1. ...
+        2. ...
+        ```python
+        # Insert minimal code here if possible
+        ```
+    validations:
+      required: true
+
+  - type: textarea
+    id: version-info
+    attributes:
+      label: Version Information
+      description: |
+        Please tell us your flashcards_backend version, Python version, and OS. Paste the output of:
+        ```
+        python --version
+        pip freeze | grep flashcards_backend   # or your install method
+        uname -a   # or your OS info
+        ```
+      placeholder: |
+        flashcards_backend commit/branch/tag:
+        Python version:
+        OS (Windows/Mac/Linux, version):
+    validations:
+      required: true

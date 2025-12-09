@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: flashcards_backend Documentation
+    url: https://github.com/maltsevmki/flashcards_backend/blob/main/README.md
+    about: Please read the documentation before opening an issue.
+  - name: Security Vulnerability Report
+    url: https://github.com/maltsevmki/flashcards_backend/security/advisories/new
+    about: Please use this link for reporting security vulnerabilities privately.
