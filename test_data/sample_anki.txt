@@ -1,0 +1,9 @@
+#separator:tab
+#html:true
+#deck column:3
+#tags column:4
+What is Python?	A programming language developed by Guido van Rossum	Programming	python basics
+What is 2+2?	4	Math	arithmetic basics
+The capital of {{c1::France}} is {{c2::Paris}}	(This is a cloze card)	Geography	europe capitals
+What is Anki?	A spaced repetition flashcard program	Software	anki srs
+

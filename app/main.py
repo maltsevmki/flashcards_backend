@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.routers.flashcards.router import router as flashcards_router
 from app.api.routers.ai.router import router as ai_router
+from app.api.routers.import_cards.router import router as import_router
 from app.core.config import settings
 from app.db import init_db, async_session
 from app.models.flashcards.card import (
@@ -48,3 +49,4 @@ app.add_middleware(
 
 app.include_router(flashcards_router, prefix='/flashcards', tags=['flashcards'])
 app.include_router(ai_router, prefix='/ai', tags=['ai'])
+app.include_router(import_router, tags=['import'])

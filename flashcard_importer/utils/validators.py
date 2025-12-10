@@ -2,7 +2,6 @@
 import re
 from typing import Optional, Tuple, List
 
-
 class AnkiHeaderParser:
     """
     Parse Anki-specific header lines in TXT exports.
@@ -101,7 +100,6 @@ class AnkiHeaderParser:
 
         return settings
 
-
 class CardValidator:
     # Pattern to detect cloze deletions like {{c1::answer}} or {{c1::answer::hint}}
     CLOZE_PATTERN = re.compile(r'\{\{c(\d+)::(.+?)(?:::(.+?))?\}\}', re.DOTALL)
@@ -182,10 +180,8 @@ class CardValidator:
             'sounds': cls.SOUND_PATTERN.findall(content)
         }
 
-
 class TagParser:
 
-    # Valid tag pattern: alphanumeric, underscores, hyphens, colons (for hierarchy)
     TAG_PATTERN = re.compile(r'[\w:_-]+')
 
     # Hierarchical tag pattern (e.g., "science::physics::quantum")
@@ -193,7 +189,6 @@ class TagParser:
 
     @classmethod
     def parse_tags(cls, tag_string: str) -> List[str]:
-
         if not tag_string:
             return []
 
@@ -203,21 +198,17 @@ class TagParser:
 
     @classmethod
     def validate_tag(cls, tag: str) -> bool:
-
         return bool(cls.TAG_PATTERN.fullmatch(tag.strip()))
 
     @classmethod
     def is_hierarchical(cls, tag: str) -> bool:
-
         return '::' in tag
 
     @classmethod
     def split_hierarchical_tag(cls, tag: str) -> List[str]:
-
         return tag.split('::')
 
     @classmethod
     def normalize_tags(cls, tags: List[str]) -> List[str]:
-
         normalized = set(tag.lower().strip() for tag in tags if tag.strip())
         return sorted(normalized)
