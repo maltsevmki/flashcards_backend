@@ -1,14 +1,15 @@
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
 
 from flashcard_importer import Flashcard, ParserFactory
 from flashcard_importer.utils import (
-    ImportLogger, LogLevel,
+    ImportLogger,
     HtmlHandler, HtmlHandlingMode,
     DeckDetector, MissingDeckHandler,
     MultiFieldHandler, FieldMapping,
     CardValidator
 )
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 print("=" * 70)
 print("PHASE 4 - EDGE CASES & VALIDATION")
@@ -39,7 +40,7 @@ print(f"  Coverage: {coverage['coverage_percent']:.1f}%")
 
 print("\n[4.1.2] Generate Warning Message")
 warning = MissingDeckHandler.get_warning_message(
-    coverage['cards_without_deck'], 
+    coverage['cards_without_deck'],
     coverage['total_cards']
 )
 print(f"  {warning}")
@@ -180,10 +181,13 @@ print(f"  Headers: {headers}")
 print(f"  Detected mapping: {mapping.to_dict()}")
 
 print("\n[4.4.2] Parse Row with Mapping")
-sample_row = ["What is Python?", "A programming language", "Created by Guido", "Programming", "python, basics", "Think of a snake"]
+sample_row = [
+    "What is Python?", "A programming language", "Created by Guido",
+    "Programming", "python, basics", "Think of a snake"
+]
 parsed = MultiFieldHandler.parse_row_with_mapping(sample_row, mapping)
 print(f"  Row: {sample_row}")
-print(f"  Parsed:")
+print("  Parsed:")
 for key, value in parsed.items():
     print(f"    {key}: {value}")
 
@@ -196,7 +200,7 @@ if errors:
 print("\n[4.4.4] Invalid Mapping Detection")
 bad_mapping = FieldMapping(front=0, back=10)  # Column 10 doesn't exist
 is_valid, errors = MultiFieldHandler.validate_mapping(bad_mapping, 5)
-print(f"  Mapping: front=0, back=10 for 5 columns")
+print("  Mapping: front=0, back=10 for 5 columns")
 print(f"  Valid: {is_valid}")
 print(f"  Errors: {errors}")
 
@@ -225,23 +229,25 @@ print("=" * 70)
 parser = ParserFactory.create("test_data/sample_cards.csv")
 result = parser.parse()
 
-print(f"\n[1] Initial Import")
+print("\n[1] Initial Import")
 print(f"  {result.summary()}")
 
-print(f"\n[2] Deck Analysis")
+print("\n[2] Deck Analysis")
 coverage = DeckDetector.analyze_deck_coverage(result.cards)
 print(f"  Coverage: {coverage['coverage_percent']:.1f}%")
 print(f"  Unique decks: {coverage['unique_decks']}")
 
-print(f"\n[3] HTML Analysis")
-html_cards = [c for c in result.cards if HtmlHandler.contains_html(c.front) or HtmlHandler.contains_html(c.back)]
+print("\n[3] HTML Analysis")
+html_cards = [
+    c for c in result.cards
+    if HtmlHandler.contains_html(c.front) or HtmlHandler.contains_html(c.back)
+]
 print(f"  Cards with HTML: {len(html_cards)}")
 
-print(f"\n[4] Cards with Extra Fields")
+print("\n[4] Cards with Extra Fields")
 extra_cards = [c for c in result.cards if c.extra]
 print(f"  Cards with extra: {len(extra_cards)}")
 
 print("\n" + "=" * 70)
 print("ALL PHASE 4 TESTS PASSED!")
 print("=" * 70)
-

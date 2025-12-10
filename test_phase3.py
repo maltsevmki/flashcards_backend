@@ -1,8 +1,9 @@
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
 
 from flashcard_importer import ParserFactory
 from flashcard_importer.parsers import CsvParser
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 print("=" * 60)
 print("PHASE 3 - CSV PARSER TEST")
@@ -34,7 +35,7 @@ settings = parser.detect_settings()
 print(f"  Detected: delimiter='{settings['delimiter']}', has_header={settings['has_header']}")
 result = parser.parse()
 print(f"  {result.summary()}")
-print(f"\n  Cards:")
+print("\n  Cards:")
 for card in result.cards:
     print(f"    - {card.front[:40]}...")
     print(f"      Deck: {card.deck_name}, Tags: {card.tags}")
@@ -60,7 +61,7 @@ parser = CsvParser("test_data/sample_cards.tsv")
 parser.set_column_mapping(front=0, back=1, deck=2)
 result = parser.parse()
 # First row is header, should be skipped if has_header=True
-print(f"  Cards with deck from column 3:")
+print("  Cards with deck from column 3:")
 for card in result.cards:
     print(f"    - {card.front}: deck={card.deck_name}")
 print("  [OK] Custom column mapping works")
@@ -68,4 +69,3 @@ print("  [OK] Custom column mapping works")
 print("\n" + "=" * 60)
 print("ALL PHASE 3 TESTS PASSED!")
 print("=" * 60)
-

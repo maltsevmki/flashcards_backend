@@ -1,9 +1,8 @@
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
 
 from flashcard_importer import (
-    Flashcard, 
-    ImportResult, 
+    Flashcard,
+    ImportResult,
     CardType,
     ParserFactory,
     FileFormatError
@@ -13,6 +12,8 @@ from flashcard_importer.utils import (
     CardValidator,
     TagParser
 )
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 print("=" * 50)
 print("PHASE 1 - FINAL TEST")
@@ -36,7 +37,7 @@ result.add_error("Line 5: Empty front field")
 result.add_error("Line 8: Invalid format")
 result.deck_detected = True
 
-print(f"\n[OK] Test 2: ImportResult")
+print("\n[OK] Test 2: ImportResult")
 print(result.summary())
 
 # Test 3: CardType enum
@@ -63,8 +64,8 @@ print(f"\n[OK] Test 7: Registered formats - {formats}")
 # Test 8: Exception handling
 try:
     ParserFactory.create("test.xyz")
-except FileFormatError as e:
-    print(f"\n[OK] Test 8: FileFormatError caught correctly")
+except FileFormatError:
+    print("\n[OK] Test 8: FileFormatError caught correctly")
 
 print("\n" + "=" * 50)
 print("ALL PHASE 1 TESTS PASSED!")

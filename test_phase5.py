@@ -1,8 +1,9 @@
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
 
 from flashcard_importer import ParserFactory
 from flashcard_importer.parsers import ApkgParser
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 print("=" * 60)
 print("PHASE 5 - APKG (ANKI PACKAGE) PARSER TEST")
@@ -39,12 +40,12 @@ print("  [OK] Decks retrieved")
 print("\n[TEST 4] Parse All Cards")
 result = parser.parse()
 print(f"  {result.summary()}")
-print(f"\n  Sample cards:")
+print("\n  Sample cards:")
 for card in result.cards[:5]:
     print(f"    - {card.front[:40]}...")
     print(f"      Deck: {card.deck_name}, Tags: {card.tags}")
 assert len(result.cards) == 8, f"Expected 8 cards, got {len(result.cards)}"
-assert result.deck_detected == True, "Decks should be detected"
+assert result.deck_detected is True, "Decks should be detected"
 print("  [OK] All cards parsed")
 
 # Test 5: Filter by deck
@@ -102,4 +103,3 @@ print(f"  [OK] ParserFactory created parser, parsed {len(result3.cards)} cards")
 print("\n" + "=" * 60)
 print("ALL PHASE 5 TESTS PASSED!")
 print("=" * 60)
-

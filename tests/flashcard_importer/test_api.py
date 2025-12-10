@@ -1,156 +1,136 @@
-"""Tests for the import API endpoints."""
+"""Integration tests for the import API endpoints."""
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 from io import BytesIO
 
-# Note: These tests require the FastAPI app to be running
-# Run with: pytest tests/flashcard_importer/test_api.py -v
+from app.main import app
 
 
 @pytest.fixture
-def sample_txt_file():
-    """Create a sample TXT file for testing."""
-    content = b"Question 1\tAnswer 1\nQuestion 2\tAnswer 2"
-    return BytesIO(content)
+def test_csv_content():
+    """Create test CSV content."""
+    content = "front,back,deck,tags\n"
+    content += "Question1,Answer1,TestDeck,tag1\n"
+    content += "Question2,Answer2,TestDeck,tag2\n"
+    return content.encode()
 
 
 @pytest.fixture
-def sample_csv_file():
-    """Create a sample CSV file for testing."""
-    content = b"front,back,deck,tags\nQ1,A1,TestDeck,tag1\nQ2,A2,TestDeck,tag2"
-    return BytesIO(content)
+def test_txt_content():
+    """Create test TXT content."""
+    return b"Question1\tAnswer1\nQuestion2\tAnswer2\n"
 
 
 @pytest.fixture
-def anki_txt_file():
-    """Create an Anki-style TXT file for testing."""
-    content = b"""#separator:tab
-#html:true
-#deck column:3
-What is Python?\tA programming language\tProgramming
-What is Java?\tAnother programming language\tProgramming
-"""
-    return BytesIO(content)
+def invalid_file_content():
+    """Create invalid file content."""
+    return b"invalid content without proper format"
 
 
-class TestImportFormats:
-    """Test the /import/formats endpoint."""
-    
-    def test_get_formats(self, client):
-        response = client.get("/import/formats")
-        assert response.status_code == 200
-        
-        data = response.json()
-        assert 'formats' in data
-        assert '.txt' in data['formats']
-        assert '.csv' in data['formats']
-        assert '.apkg' in data['formats']
+class TestImportEndpoints:
+    """Test class for import API endpoints."""
 
+    @pytest.mark.asyncio
+    async def test_get_supported_formats(self):
+        """Test getting list of supported formats."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get("/import/formats")
+            assert response.status_code == 200
+            data = response.json()
+            assert "formats" in data
+            assert ".txt" in data["formats"]
+            assert ".csv" in data["formats"]
+            assert ".xlsx" in data["formats"]
+            assert ".apkg" in data["formats"]
 
-class TestImportPreview:
-    """Test the /import/preview endpoint."""
-    
-    def test_preview_txt(self, client, sample_txt_file):
-        response = client.post(
-            "/import/preview",
-            files={"file": ("test.txt", sample_txt_file, "text/plain")}
-        )
-        assert response.status_code == 200
-        
-        data = response.json()
-        assert data['filename'] == "test.txt"
-        assert data['format'] == ".txt"
-        assert data['total_cards'] >= 0
-    
-    def test_preview_invalid_format(self, client):
-        content = BytesIO(b"test content")
-        response = client.post(
-            "/import/preview",
-            files={"file": ("test.xyz", content, "application/octet-stream")}
-        )
-        assert response.status_code == 400
+    @pytest.mark.asyncio
+    async def test_preview_csv_file(self, test_csv_content):
+        """Test previewing a CSV file."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            files = {"file": ("test.csv", BytesIO(test_csv_content), "text/csv")}
+            response = await client.post("/import/preview", files=files)
+            assert response.status_code == 200
+            data = response.json()
+            assert "preview_cards" in data
+            assert "total_count" in data
+            assert "detected_settings" in data
 
+    @pytest.mark.asyncio
+    async def test_upload_csv_file(self, test_csv_content):
+        """Test uploading and importing a CSV file."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            files = {"file": ("test.csv", BytesIO(test_csv_content), "text/csv")}
+            response = await client.post("/import/upload", files=files)
+            assert response.status_code == 200
+            data = response.json()
+            assert data['success'] is True
+            assert "summary" in data
+            assert data["summary"]["total_imported"] == 2
 
-class TestImportUpload:
-    """Test the /import/upload endpoint."""
-    
-    def test_upload_txt(self, client, sample_txt_file):
-        response = client.post(
-            "/import/upload",
-            files={"file": ("test.txt", sample_txt_file, "text/plain")}
-        )
-        assert response.status_code == 200
-        
-        data = response.json()
-        assert data['success'] == True
-        assert 'cards' in data
-        assert 'summary' in data
-    
-    def test_upload_csv_with_options(self, client, sample_csv_file):
-        response = client.post(
-            "/import/upload",
-            files={"file": ("test.csv", sample_csv_file, "text/csv")},
-            data={
-                "default_deck": "MyDefaultDeck",
-                "strip_html": "false"
+    @pytest.mark.asyncio
+    async def test_upload_txt_file(self, test_txt_content):
+        """Test uploading and importing a TXT file."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            files = {"file": ("test.txt", BytesIO(test_txt_content), "text/plain")}
+            response = await client.post("/import/upload", files=files)
+            assert response.status_code == 200
+            data = response.json()
+            assert data['success'] is True
+            assert data["summary"]["total_imported"] == 2
+
+    @pytest.mark.asyncio
+    async def test_upload_with_default_deck(self, test_csv_content):
+        """Test uploading with default deck specified."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            files = {"file": ("test.csv", BytesIO(test_csv_content), "text/csv")}
+            data_form = {"default_deck": "CustomDeck"}
+            response = await client.post(
+                "/import/upload", files=files, data=data_form
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data['success'] is True
+
+    @pytest.mark.asyncio
+    async def test_upload_unsupported_format(self):
+        """Test uploading an unsupported file format."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            files = {
+                "file": ("test.xyz", BytesIO(b"content"), "application/octet-stream")
             }
-        )
-        assert response.status_code == 200
-        
-        data = response.json()
-        assert data['success'] == True
-    
-    def test_upload_with_auto_assign_decks(self, client, sample_txt_file):
-        response = client.post(
-            "/import/upload",
-            files={"file": ("test.txt", sample_txt_file, "text/plain")},
-            data={"auto_assign_decks": "true"}
-        )
-        assert response.status_code == 200
-    
-    def test_upload_invalid_format(self, client):
-        content = BytesIO(b"test content")
-        response = client.post(
-            "/import/upload",
-            files={"file": ("test.pdf", content, "application/pdf")}
-        )
-        assert response.status_code == 400
+            response = await client.post("/import/upload", files=files)
+            assert response.status_code == 400
+            data = response.json()
+            assert "detail" in data
 
+    @pytest.mark.asyncio
+    async def test_validate_valid_file(self, test_csv_content):
+        """Test validating a valid file."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            files = {"file": ("test.csv", BytesIO(test_csv_content), "text/csv")}
+            response = await client.post("/import/validate", files=files)
+            assert response.status_code == 200
+            data = response.json()
+            assert data['valid'] is True
+            assert data['can_import'] is True
 
-class TestImportValidate:
-    """Test the /import/validate endpoint."""
-    
-    def test_validate_valid_file(self, client, sample_txt_file):
-        response = client.post(
-            "/import/validate",
-            files={"file": ("test.txt", sample_txt_file, "text/plain")}
-        )
-        assert response.status_code == 200
-        
-        data = response.json()
-        assert 'valid' in data
-        assert 'can_import' in data
-    
-    def test_validate_invalid_format(self, client):
-        content = BytesIO(b"test content")
-        response = client.post(
-            "/import/validate",
-            files={"file": ("test.xyz", content, "application/octet-stream")}
-        )
-        assert response.status_code == 200
-        
-        data = response.json()
-        assert data['valid'] == False
-        assert data['can_import'] == False
-
-
-# Fixture for test client - adjust based on your app structure
-@pytest.fixture
-def client():
-    """Create test client. Adjust import based on your app structure."""
-    try:
-        from app.main import app
-        return TestClient(app)
-    except ImportError:
-        pytest.skip("FastAPI app not available")
-
+    @pytest.mark.asyncio
+    async def test_validate_invalid_format(self):
+        """Test validating an unsupported format."""
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            files = {
+                "file": ("test.xyz", BytesIO(b"content"), "application/octet-stream")
+            }
+            response = await client.post("/import/validate", files=files)
+            assert response.status_code == 200
+            data = response.json()
+            assert data['valid'] is False
+            assert data['can_import'] is False

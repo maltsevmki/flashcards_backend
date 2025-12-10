@@ -1,8 +1,9 @@
 import sys
-sys.stdout.reconfigure(encoding='utf-8')
 
 from flashcard_importer import ParserFactory
 from flashcard_importer.parsers import XlsxParser
+
+sys.stdout.reconfigure(encoding='utf-8')
 
 print("=" * 60)
 print("PHASE 4 - XLSX (EXCEL) PARSER TEST")
@@ -30,19 +31,19 @@ settings = parser.detect_settings()
 print(f"  Active sheet: {settings['active_sheet']}")
 print(f"  Has header: {settings['has_header']}")
 print(f"  First row: {settings['first_row']}")
-assert settings['has_header'] == True, "Should detect header"
+assert settings['has_header'] is True, "Should detect header"
 print("  [OK] Settings detected")
 
 # Test 4: Parse main sheet
 print("\n[TEST 4] Parse Main Sheet")
 result = parser.parse()
 print(f"  {result.summary()}")
-print(f"\n  Cards parsed:")
+print("\n  Cards parsed:")
 for card in result.cards:
     print(f"    - {card.front[:45]}...")
     print(f"      Deck: {card.deck_name}, Tags: {card.tags}, Type: {card.card_type.value}")
 assert len(result.cards) == 5, f"Expected 5 cards, got {len(result.cards)}"
-assert result.deck_detected == True, "Deck should be detected"
+assert result.deck_detected is True, "Deck should be detected"
 print("  [OK] Main sheet parsed")
 
 # Test 5: Parse second sheet
@@ -74,4 +75,3 @@ print(f"  [OK] ParserFactory created parser, parsed {len(result3.cards)} cards")
 print("\n" + "=" * 60)
 print("ALL PHASE 4 TESTS PASSED!")
 print("=" * 60)
-
