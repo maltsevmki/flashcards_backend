@@ -17,3 +17,7 @@ pydantic-settings>=2.6.1
 
 # Utilities
 python-dotenv>=1.2.1
+python-multipart>=0.0.9
+
+# Excel file support
+openpyxl>=3.1.0
