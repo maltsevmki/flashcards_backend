@@ -53,9 +53,9 @@ class TestImportEndpoints:
             response = await client.post("/import/preview", files=files)
             assert response.status_code == 200
             data = response.json()
-            assert "preview_cards" in data
-            assert "total_count" in data
-            assert "detected_settings" in data
+            assert "sample_cards" in data
+            assert "total_cards" in data
+            assert "settings" in data
 
     @pytest.mark.asyncio
     async def test_upload_csv_file(self, test_csv_content):
