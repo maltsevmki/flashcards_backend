@@ -1,6 +1,6 @@
-
 import re
 from typing import Optional, Tuple, List
+
 
 class AnkiHeaderParser:
     """
@@ -100,6 +100,7 @@ class AnkiHeaderParser:
 
         return settings
 
+
 class CardValidator:
     # Pattern to detect cloze deletions like {{c1::answer}} or {{c1::answer::hint}}
     CLOZE_PATTERN = re.compile(r'\{\{c(\d+)::(.+?)(?:::(.+?))?\}\}', re.DOTALL)
@@ -179,6 +180,7 @@ class CardValidator:
             'images': cls.IMAGE_PATTERN.findall(content),
             'sounds': cls.SOUND_PATTERN.findall(content)
         }
+
 
 class TagParser:
 

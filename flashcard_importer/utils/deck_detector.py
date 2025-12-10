@@ -1,5 +1,4 @@
-import re
-from typing import List, Optional, Dict, Tuple
+from typing import List, Optional, Dict
 from collections import Counter
 
 
@@ -8,23 +7,37 @@ class DeckDetector:
     Detect and suggest deck names when missing from import files.
     Uses content analysis and pattern matching.
     """
-    
+
     # Common category keywords and their suggested deck names
     CATEGORY_PATTERNS = {
-        'programming': ['python', 'java', 'javascript', 'code', 'function', 'class', 
-                       'variable', 'loop', 'algorithm', 'api', 'database', 'sql'],
-        'languages': ['spanish', 'french', 'german', 'japanese', 'chinese', 'english',
-                     'vocabulary', 'grammar', 'conjugation', 'translation'],
-        'science': ['biology', 'chemistry', 'physics', 'atom', 'molecule', 'cell',
-                   'energy', 'force', 'evolution', 'dna', 'element'],
-        'math': ['equation', 'formula', 'calculate', 'number', 'algebra', 'geometry',
-                'calculus', 'derivative', 'integral', 'function', 'graph'],
-        'history': ['war', 'century', 'empire', 'king', 'president', 'revolution',
-                   'ancient', 'medieval', 'dynasty', 'civilization'],
-        'geography': ['country', 'capital', 'continent', 'ocean', 'mountain', 'river',
-                     'population', 'climate', 'region', 'border'],
-        'medicine': ['disease', 'symptom', 'treatment', 'drug', 'anatomy', 'diagnosis',
-                    'patient', 'surgery', 'therapy', 'medical'],
+        'programming': [
+            'python', 'java', 'javascript', 'code', 'function', 'class',
+            'variable', 'loop', 'algorithm', 'api', 'database', 'sql'
+        ],
+        'languages': [
+            'spanish', 'french', 'german', 'japanese', 'chinese', 'english',
+            'vocabulary', 'grammar', 'conjugation', 'translation'
+        ],
+        'science': [
+            'biology', 'chemistry', 'physics', 'atom', 'molecule', 'cell',
+            'energy', 'force', 'evolution', 'dna', 'element'
+        ],
+        'math': [
+            'equation', 'formula', 'calculate', 'number', 'algebra', 'geometry',
+            'calculus', 'derivative', 'integral', 'function', 'graph'
+        ],
+        'history': [
+            'war', 'century', 'empire', 'king', 'president', 'revolution',
+            'ancient', 'medieval', 'dynasty', 'civilization'
+        ],
+        'geography': [
+            'country', 'capital', 'continent', 'ocean', 'mountain', 'river',
+            'population', 'climate', 'region', 'border'
+        ],
+        'medicine': [
+            'disease', 'symptom', 'treatment', 'drug', 'anatomy', 'diagnosis',
+            'patient', 'surgery', 'therapy', 'medical'
+        ],
     }
     
     @classmethod

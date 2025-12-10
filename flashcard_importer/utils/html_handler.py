@@ -1,5 +1,4 @@
 import re
-from typing import Tuple, List
 from enum import Enum
 from html import unescape
 

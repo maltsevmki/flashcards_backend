@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Union, List
 
-from flashcard_importer.models.flashcard import Flashcard, ImportResult
+from flashcard_importer.models.flashcard import ImportResult
 from flashcard_importer.exceptions import FileFormatError
 
 

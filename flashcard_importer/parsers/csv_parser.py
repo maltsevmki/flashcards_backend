@@ -36,10 +36,12 @@ class CsvParser(BaseParser):
         has_header = False
         try:
             first_line = sample.split('\n')[0].lower()
-            header_keywords = ['front', 'back', 'question', 'answer', 'term', 'definition', 
-                             'deck', 'tags', 'category', 'word', 'meaning']
+            header_keywords = [
+                'front', 'back', 'question', 'answer', 'term', 'definition',
+                'deck', 'tags', 'category', 'word', 'meaning'
+            ]
             has_header = any(kw in first_line for kw in header_keywords)
-        except:
+        except Exception:
             pass
         
         # Fall back to csv.Sniffer if keyword detection didn't find headers

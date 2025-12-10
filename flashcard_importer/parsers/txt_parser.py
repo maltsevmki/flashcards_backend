@@ -1,10 +1,9 @@
 from pathlib import Path
-from typing import Union, List, Optional
+from typing import Union, Optional
 
 from flashcard_importer.models.flashcard import Flashcard, ImportResult, CardType
 from flashcard_importer.parsers.base import BaseParser, ParserFactory
 from flashcard_importer.utils.validators import AnkiHeaderParser, CardValidator
-from flashcard_importer.exceptions import ParsingError, EmptyFileError
 
 
 class TxtParser(BaseParser):

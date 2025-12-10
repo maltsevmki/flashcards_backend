@@ -38,7 +38,7 @@ class ApkgParser(BaseParser):
         if self._temp_dir and os.path.exists(self._temp_dir):
             try:
                 shutil.rmtree(self._temp_dir)
-            except:
+            except Exception:
                 pass
     
     def _extract_database(self) -> str:

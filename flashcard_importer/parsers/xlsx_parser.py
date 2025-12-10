@@ -41,8 +41,10 @@ class XlsxParser(BaseParser):
             first_row.append(str(cell.value).lower() if cell.value else '')
         
         # Detect headers by checking for common column names
-        header_keywords = ['front', 'back', 'question', 'answer', 'term', 'definition',
-                          'deck', 'tags', 'category', 'word', 'meaning']
+        header_keywords = [
+            'front', 'back', 'question', 'answer', 'term', 'definition',
+            'deck', 'tags', 'category', 'word', 'meaning'
+        ]
         has_header = any(kw in ' '.join(first_row) for kw in header_keywords)
         
         wb.close()
