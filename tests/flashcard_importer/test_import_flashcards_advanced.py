@@ -10,7 +10,6 @@ import sqlite3
 import json
 import os
 from io import BytesIO
-from pathlib import Path
 
 from httpx import AsyncClient, ASGITransport
 
@@ -21,12 +20,9 @@ from flashcard_importer.parsers import TxtParser, CsvParser
 from flashcard_importer.utils import DeckDetector, MissingDeckHandler, HtmlHandler
 from flashcard_importer.utils.validators import CardValidator, TagParser, AnkiHeaderParser
 from flashcard_importer.exceptions import (
-    FlashcardImportError,
     FileFormatError,
     ParsingError,
-    ValidationError,
     EmptyFileError,
-    AnkiDatabaseError
 )
 
 
